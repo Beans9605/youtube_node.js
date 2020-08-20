@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Typography, Button, Form, message, Input, Icon } from 'antd';
 import Dropzone from 'react-dropzone';
 import Axios from 'axios'
+import { useSelector } from 'react-redux';
 
 
 const { Title } = Typography;
@@ -11,6 +12,7 @@ const PrivateOptions = [
     {value: 0, label: "Private"},
     {value: 1, label: "Public"},
 ]
+
 const CategoryOptions = [
     {value: 0, label:"Film & Animation"},
     {value: 1, label:"Autos & Vehicles"},
@@ -18,10 +20,11 @@ const CategoryOptions = [
     {value: 3, label:"Pets & Animals"},
 ]
 
-
-
-function VideoUploadPage() {
-
+function VideoUploadPage(props) {
+    const user = useSelector(state => state.user);
+    const [FilePath, setFilePath] = useState("")
+    const [Duration, setDuration] = useState("")
+    const [ThumbnailPath, setThumbnailPath] = useState("")
     const [VideoTitle, setVideoTitle] = useState("")
     const [Description, setDescription] = useState("")
     const [Private, setPrivate] = useState(0)
@@ -58,9 +61,16 @@ function VideoUploadPage() {
                     fileName : response.data.fileName
                 }
 
+                setFilePath(response.data.url)
+
                 Axios.post('/api/video/thumbnail', variable)
                 .then(response => {
                     if(response.data.success) {
+
+                        setDuration(response.data.fileDuration)
+                        setThumbnailPath(response.data.url)
+
+
 
                     }
                     else {
@@ -74,12 +84,44 @@ function VideoUploadPage() {
         })
     }
 
+    const onSubmit = (e) => {
+        e.preventDefault();
+
+        const variables = {
+            writer: user.userData._id,
+            title : VideoTitle,
+            description : Description,
+            privacy : Private,
+            filePath: FilePath,
+            category: Category,
+            duration: Duration,
+            thumbnail: ThumbnailPath,
+
+        }
+
+        Axios.post('/api/video/uploadVideo', variables)
+        .then(response => {
+            if(response.data.success) {
+                message.success('성공적으로 업로드 했습니다.')
+                setTimeout(() => {
+                    props.history.push('/');
+                }, 3000);
+
+                console.log(response.data)
+            }
+            else {
+                alert('비디오 업로드에 실패했습니다.')
+            }
+        })
+    }
+
+
     return (
         <div style={{maxWidth:'700px', margin:"2rem auto"}}>
             <div style={{textAlign:'center', marginBottom:"2rem"}}>
                 <Title level={2}>Upload Video</Title>
             </div>
-            <Form onSubmit>
+            <Form onSubmit={onSubmit}>
                 <div style={{display:'flex', justifyContent: 'space_between'}}>
                     {/* Drop zone */}
                     <Dropzone 
@@ -97,10 +139,12 @@ function VideoUploadPage() {
                     )}
                     </Dropzone>
                     {/* Thumnail */}
+                        {ThumbnailPath &&
                     <div>
-                        <img src alt />
+                        <img src={`http://localhost:5000/${ThumbnailPath}`} alt="thumbnail" />
                         
                     </div>
+                    }
                 </div>
                 <br />
                 <br />
@@ -137,7 +181,7 @@ function VideoUploadPage() {
                 </select>
                 <br />
                 <br />
-                <Button type="primary" size="large" onClick>
+                <Button type="primary" size="large" onClick={onSubmit}>
                     Submit
                 </Button>
             </Form>
