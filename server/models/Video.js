@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const videoSchema = mongoose.Schema({
     writer : {
         type : mongoose.Schema.Types.ObjectId,
+        // 유저 모델에 있는 모든 정보를 가져옴
         ref : "User"
     },
     title : {

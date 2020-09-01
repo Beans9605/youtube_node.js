@@ -28,7 +28,7 @@ function VideoUploadPage(props) {
     const [VideoTitle, setVideoTitle] = useState("")
     const [Description, setDescription] = useState("")
     const [Private, setPrivate] = useState(0)
-    const [Category, setCategory] = useState("Film & Animation")
+    const [Category, setCategory] = useState(0)
     
     const onTitleChange = (e) => {
         setVideoTitle(e.currentTarget.value)
