@@ -8,7 +8,7 @@ const path = require('path');
 const { request } = require('express');
 var ffmpeg = require('fluent-ffmpeg');
 const { Console } = require('console');
-
+const {Subscriber} = require('../models/Subscriber');
 
 let storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -106,5 +106,28 @@ router.post('/getVideoDetail', (req, res) => {
     
 })
 
+router.post('/getSubscriptionVideo', (req, res) => {
+    // 자신의 아이디를 가지고 구독하는 사람을 찾는다.
+        Subscriber.find({userFrom : req.body.userFrom})
+        .exec((err, subscriberInfo) => {
+            if(err) return res.status(400).json({success:false, err});
+
+            let subscribedUsers = [];
+
+            subscriberInfo.map((subscriber, i) => {
+                subscribedUsers.push(subscriber.userTo);
+            });
+
+            // $in은 여러개의 데이터를 집어 넣어서 찾을때
+            Video.find({writer : {$in:subscribedUsers}})
+            .populate('writer')
+            .exec((err, videos) => {
+                if(err) return res.status(400).json({success: false, err})
+                return res.status(200).json({success:true, videos})
+            })
+
+        })
+    // 찾은 사람들의 비디오를 가지고 온다.
+})
 
 module.exports = router;
